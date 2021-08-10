@@ -28,6 +28,7 @@ cc_library(
     name = "tflite_c",
     srcs = ["tflite_c.cc"],
     hdrs = [
+        "apple/tflite_settings_apple.h",
         "tflite_settings.h",
         "thread_pool.h",
         "utils.h",
@@ -49,6 +50,9 @@ cc_library(
     ] + select({
         "@org_tensorflow//tensorflow:android": [
             "@org_tensorflow//tensorflow/lite/delegates/gpu:delegate",
+        ],
+        "@org_tensorflow//tensorflow:macos_arm64": [
+            "@org_tensorflow//tensorflow/lite/delegates/coreml:coreml_delegate",
         ],
         "//conditions:default": [],
     }),

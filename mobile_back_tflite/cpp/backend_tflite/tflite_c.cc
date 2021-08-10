@@ -36,6 +36,12 @@ limitations under the License.
 #include "tensorflow/lite/delegates/gpu/delegate.h"
 #include "tensorflow/lite/delegates/nnapi/nnapi_delegate.h"
 #endif
+
+#if __APPLE__
+#include "tensorflow/lite/delegates/coreml/coreml_delegate.h"
+#include "apple/tflite_settings_apple.h"
+#endif
+
 #include "tensorflow/core/platform/logging.h"
 #if MTK_TFLITE_NEURON_BACKEND
 #include "neuron/tflite_settings_mtk.h"
@@ -148,8 +154,9 @@ bool mlperf_backend_matches_hardware(const char** not_allowed_message,
 #endif
 }
 
-#if __ANDROID__
+#if __ANDROID__ || __APPLE__
 bool is_emulator() {
+#if __ANDROID__
   char ro_build_characteristics[PROP_VALUE_MAX + 1];
   if (__system_property_get("ro.build.characteristics",
                             ro_build_characteristics)) {
@@ -157,6 +164,7 @@ bool is_emulator() {
     ptr = strstr(ro_build_characteristics, "emulator");
     if (ptr) return true;
   }
+#endif
   return false;
 }
 #endif
@@ -203,6 +211,7 @@ mlperf_backend_ptr_t mlperf_backend_create(
       }
     }
 
+#if __ANDROID__ || __APPLE__
 #if __ANDROID__
     if (!is_emulator() && ((strcmp(configs->accelerator, "gpu_f16") == 0) ||
                            (strcmp(configs->accelerator, "gpu") == 0))) {
@@ -238,10 +247,18 @@ mlperf_backend_ptr_t mlperf_backend_create(
 #endif // MTK_TFLITE_NEURON_BACKEND
     }
 
+#else
+    if (strcmp(configs->accelerator, "coreml") == 0) {
+      TfLiteCoreMlDelegateOptions options;
+        options.enabled_devices = TfLiteCoreMlDelegateAllDevices;
+        options.min_nodes_per_partition  = 1;
+        delegate = TfLiteCoreMlDelegateCreate(&options);
+    }
+#endif // __ANDROID__
     if (delegate != nullptr) {
       TfLiteInterpreterOptionsAddDelegate(option_ptr, delegate);
     }
-#endif // __ANDROID__
+#endif // __ANDROID__ || __APPLE__
   };
 
   const int dispatch_max = shard_num;
