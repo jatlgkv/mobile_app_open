@@ -39,6 +39,7 @@ limitations under the License.
 
 #if __APPLE__
 #include "tensorflow/lite/delegates/coreml/coreml_delegate.h"
+#include "tensorflow/lite/delegates/gpu/metal_delegate.h"
 #include "apple/tflite_settings_apple.h"
 #endif
 
@@ -253,6 +254,9 @@ mlperf_backend_ptr_t mlperf_backend_create(
         options.enabled_devices = TfLiteCoreMlDelegateAllDevices;
         options.min_nodes_per_partition  = 1;
         delegate = TfLiteCoreMlDelegateCreate(&options);
+    } else if (strcmp(configs->accelerator, "metal") == 0) {
+        TFLGpuDelegateOptions options;
+        delegate = TFLGpuDelegateCreate(&options);
     }
 #endif // __ANDROID__
     if (delegate != nullptr) {

@@ -53,6 +53,7 @@ cc_library(
         ],
         "@org_tensorflow//tensorflow:macos_arm64": [
             "@org_tensorflow//tensorflow/lite/delegates/coreml:coreml_delegate",
+            "@org_tensorflow//tensorflow/lite/delegates/gpu:metal_delegate",
         ],
         "//conditions:default": [],
     }),
